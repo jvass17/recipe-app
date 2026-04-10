@@ -18,7 +18,28 @@ A Progressive Web App for browsing recipes from **TheMealDB** through a local **
 
 ## Setup
 
-### 1. API proxy (Express)
+### Option A — one dev command from repo root (recommended)
+
+From the **repository root** (where `package.json` and `vercel.json` live), first install dependencies once:
+
+```bash
+npm install
+npm install --prefix client
+npm install --prefix server
+cd server && cp .env.example .env && cd ..
+```
+
+Then whenever you develop:
+
+```bash
+npm run dev
+```
+
+This runs **Express** (`server`, port **5174**) and **Vite** (`client`, port **5173**) together via `concurrently`.
+
+### Option B — two terminals
+
+#### 1. API proxy (Express)
 
 ```bash
 cd server
@@ -29,9 +50,7 @@ npm run dev
 
 The server listens on **http://localhost:5174** by default (`PORT` in `.env`).
 
-### 2. Client (Vite)
-
-In a second terminal:
+#### 2. Client (Vite)
 
 ```bash
 cd client
@@ -94,10 +113,29 @@ To change behavior, edit `CACHE_VERSION` and the branches in `fetch` (e.g. short
 
 ## Build and deploy
 
-- **Client:** `cd client && npm run build` → static output in `client/dist`. Suitable for **Netlify** or **Vercel** (configure SPA fallback to `index.html` for client routes).
-- **Server:** `cd server && npm run build && npm start` → run `node dist/index.js`. Suitable for **Render**, **Fly.io**, **Railway**, etc. Set `MEALDB_*` and `PORT` in the host’s environment; do not commit `.env`.
+### Vercel (static client + serverless `/api`)
 
-For a single origin in production, put the API and static site behind one domain (reverse proxy) so `/api/*` and the PWA share an origin.
+This repo includes **`vercel.json`** and an **`api/`** folder: Vercel builds the **Vite app** from `client/` and deploys **Node serverless functions** for the same `/api/*` routes the Express app uses locally. The client keeps using relative `/api/*` URLs, so everything stays **one origin** (good for the service worker).
+
+1. Push the repo to GitHub and import the project in [Vercel](https://vercel.com).
+2. **Root directory:** leave default (repo root).
+3. **Environment variables** (Project → Settings → Environment Variables):
+
+   | Name | Value |
+   |------|--------|
+   | `MEALDB_API_BASE` | `https://www.themealdb.com/api/json/v1` |
+   | `MEALDB_API_KEY` | `1` (or your key) |
+
+4. Deploy. Vercel runs `installCommand` from `vercel.json` (installs root deps for `@vercel/node` + client deps), then builds `client`.
+
+The **`server/`** Express app is still used for **local development** (`npm run dev` from root or `cd server && npm run dev`). You do not need to run Express on Vercel when using the `api/` serverless routes.
+
+### Other hosts
+
+- **Client only:** `cd client && npm run build` → `client/dist`. Use SPA fallback to `index.html` for client-side routes.
+- **Express elsewhere:** `cd server && npm run build && npm start` on **Render**, **Fly.io**, **Railway**, etc. Set `MEALDB_*` and `PORT`; point the client at that API with a build-time base URL if it is not same-origin.
+
+For a single origin in production, either use **Vercel as above** or put the API and static site behind one domain (reverse proxy) so `/api/*` and the PWA share an origin.
 
 ## Security
 
@@ -115,6 +153,9 @@ For a single origin in production, put the API and static site behind one domain
 
 | Location | Command | Purpose |
 |----------|---------|---------|
+| **repo root** | `npm install` | Root deps (`@vercel/node`, `concurrently`) + run `cd client && npm install` when setting up |
+| **repo root** | `npm run dev` | Runs **server** + **client** together (Express 5174 + Vite 5173) |
+| **repo root** | `npm run build` | Production build of the **client** (`client/dist`) |
 | `server` | `npm run dev` | Dev API on port 5174 (tsx watch) |
 | `server` | `npm run build` / `npm start` | Production compile + run |
 | `client` | `npm run dev` | Vite dev server with `/api` proxy |

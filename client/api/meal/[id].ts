@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { forwardJson } from "../_lib/mealdb";
+import { forwardJson, sendJson } from "../_lib/mealdb";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    sendJson(res, 405, { error: "Method not allowed" });
+    return;
   }
   const id =
     typeof req.query.id === "string"
@@ -12,7 +13,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? String(req.query.id[0] ?? "").trim()
         : "";
   if (!id) {
-    return res.status(400).json({ error: "Missing id" });
+    sendJson(res, 400, { error: "Missing id" });
+    return;
   }
   const path = `/lookup.php?i=${encodeURIComponent(id)}`;
   await forwardJson(res, path, "public, max-age=300, stale-while-revalidate=86400");

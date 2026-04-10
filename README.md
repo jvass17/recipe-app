@@ -20,7 +20,7 @@ A Progressive Web App for browsing recipes from **TheMealDB** through a local **
 
 ### Option A — one dev command from repo root (recommended)
 
-From the **repository root** (where `package.json` and `vercel.json` live), first install dependencies once:
+From the **repository root** (where the root `package.json` lives), first install dependencies once:
 
 ```bash
 npm install
@@ -115,10 +115,10 @@ To change behavior, edit `CACHE_VERSION` and the branches in `fetch` (e.g. short
 
 ### Vercel (static client + serverless `/api`)
 
-This repo includes **`vercel.json`** and an **`api/`** folder: Vercel builds the **Vite app** from `client/` and deploys **Node serverless functions** for the same `/api/*` routes the Express app uses locally. The client keeps using relative `/api/*` URLs, so everything stays **one origin** (good for the service worker).
+Serverless routes live under **`client/api/`** next to the Vite app, and **`client/vercel.json`** configures the build. The client keeps using relative `/api/*` URLs (same origin — good for the service worker).
 
 1. Push the repo to GitHub and import the project in [Vercel](https://vercel.com).
-2. **Root directory:** leave default (repo root).
+2. **Root Directory:** set to **`client`** (required). If the root is the repo root, Vercel never sees `client/api` and every `/api/*` request returns **404**.
 3. **Environment variables** (Project → Settings → Environment Variables):
 
    | Name | Value |
@@ -126,9 +126,9 @@ This repo includes **`vercel.json`** and an **`api/`** folder: Vercel builds the
    | `MEALDB_API_BASE` | `https://www.themealdb.com/api/json/v1` |
    | `MEALDB_API_KEY` | `1` (or your key) |
 
-4. Deploy. Vercel runs `installCommand` from `vercel.json` (installs root deps for `@vercel/node` + client deps), then builds `client`.
+4. Redeploy. Vercel runs `npm install` in `client/`, then `npm run build` (see `client/vercel.json`).
 
-The **`server/`** Express app is still used for **local development** (`npm run dev` from root or `cd server && npm run dev`). You do not need to run Express on Vercel when using the `api/` serverless routes.
+The **`server/`** Express app is only for **local development** (`npm run dev` from the repo root or `cd server && npm run dev`). Production on Vercel uses **`client/api`** serverless functions, not Express.
 
 ### Other hosts
 
@@ -153,7 +153,7 @@ For a single origin in production, either use **Vercel as above** or put the API
 
 | Location | Command | Purpose |
 |----------|---------|---------|
-| **repo root** | `npm install` | Root deps (`@vercel/node`, `concurrently`) + run `cd client && npm install` when setting up |
+| **repo root** | `npm install` | Root deps (`concurrently`) for `npm run dev`; also run `npm install --prefix client` and `npm install --prefix server` once |
 | **repo root** | `npm run dev` | Runs **server** + **client** together (Express 5174 + Vite 5173) |
 | **repo root** | `npm run build` | Production build of the **client** (`client/dist`) |
 | `server` | `npm run dev` | Dev API on port 5174 (tsx watch) |

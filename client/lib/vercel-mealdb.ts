@@ -1,8 +1,8 @@
 import type { VercelResponse } from "@vercel/node";
 
 /**
- * Vercel Node handlers use Node's ServerResponse — not Express.
- * Use writeHead/end only (no res.send / res.json / res.status().json).
+ * Shared TheMealDB proxy for Vercel serverless routes.
+ * Must live OUTSIDE `api/` — folders under `api/_*` are excluded from deployment.
  */
 export function sendJson(res: VercelResponse, status: number, body: unknown): void {
   const payload = JSON.stringify(body);
@@ -17,9 +17,6 @@ export function getMealDbUrl(base: string, key: string, pathWithQuery: string): 
   return `${baseTrim}/${key}${path}`;
 }
 
-/**
- * Proxy TheMealDB JSON — env vars only on the server (set in Vercel project settings).
- */
 export async function forwardJson(
   res: VercelResponse,
   upstreamPath: string,

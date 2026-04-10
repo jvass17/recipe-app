@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { forwardJson, sendJson } from "./_lib/mealdb";
+import { forwardJson, sendJson } from "../lib/vercel-mealdb";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {

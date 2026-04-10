@@ -58,7 +58,9 @@ async function networkFirstApi(request, cacheName) {
   const cache = await caches.open(cacheName);
   try {
     const res = await fetch(request);
-    if (res.ok) {
+    const contentType = res.headers.get("Content-Type") || "";
+    const isJson = contentType.includes("application/json");
+    if (res.ok && isJson) {
       await cache.put(request, res.clone());
     }
     return res;
@@ -82,7 +84,9 @@ async function staleWhileRevalidate(request, cacheName) {
   const cached = await cache.match(request);
   const networkPromise = fetch(request)
     .then((res) => {
-      if (res.ok) {
+      const contentType = res.headers.get("Content-Type") || "";
+      const isJson = contentType.includes("application/json");
+      if (res.ok && isJson) {
         cache.put(request, res.clone());
       }
       return res;

@@ -10,15 +10,33 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+function isLikelyOfflineError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("offline") ||
+    message.includes("failed to fetch") ||
+    message.includes("networkerror") ||
+    message.includes("network request failed")
+  );
+}
+
 async function loadMealWithOfflineFallback(id: string): Promise<Meal> {
   try {
     const m = await getMealById(id);
     if (m) return m;
-  } catch {
-    /* try offline */
+  } catch (error) {
+    if (!isLikelyOfflineError(error)) {
+      throw error;
+    }
   }
+
   const disk = await getFavorite(id);
   if (disk) return disk;
+
+  if (navigator.onLine) {
+    throw new Error("Could not load this recipe right now. Please try again.");
+  }
   throw new Error("Recipe unavailable offline. Connect to the internet or open a saved favorite.");
 }
 

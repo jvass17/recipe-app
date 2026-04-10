@@ -117,7 +117,7 @@ To change behavior, edit `CACHE_VERSION` and the branches in `fetch` (e.g. short
 
 Serverless routes live under **`client/api/`** next to the Vite app, and **`client/vercel.json`** configures the build. The client keeps using relative `/api/*` URLs (same origin — good for the service worker).
 
-**Important:** On Vercel, paths under `api/` that start with **`_`** are **not** deployed. Shared proxy code must live **inside** `api/` so it is bundled — e.g. **`client/api/shared/mealdb.ts`** (imported by other `api/*.ts` files). Putting helpers only in `client/lib/` can fail at runtime because those files are **outside** the `/api` bundle.
+**Important:** Each file under **`client/api/`** is its **own** serverless function. **Do not import** one `api/*.ts` file from another — Vercel’s bundler often breaks that and you get **500** at runtime. The MealDB proxy logic is **duplicated** in each route file on purpose.
 
 1. Push the repo to GitHub and import the project in [Vercel](https://vercel.com).
 2. **Root Directory:** set to **`client`** (required). If the root is the repo root, Vercel never sees `client/api` and every `/api/*` request returns **404**.

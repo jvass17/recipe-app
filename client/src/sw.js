@@ -6,7 +6,7 @@
  * - MealDB images: stale-while-revalidate.
  * - Navigations: network-first; SPA fallback to cached index.html; last resort offline.html.
  */
-const CACHE_VERSION = "recipes-v1";
+const CACHE_VERSION = "recipes-v2";
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
